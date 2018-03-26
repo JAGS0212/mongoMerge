@@ -3,7 +3,7 @@ const mongoDb = require('./mongoDb.js');
 const fs = require('fs');
 const util = require('util');
 const path  = require('path');
-
+require('mongodb').obj
 
 const dbUrl = 'mongodb://localhost:27017';
 
@@ -46,21 +46,20 @@ async function main(){
             
             let client = clients.pop();
             let extra = extraInfo.pop();
-            client.country = extra.country;
-            client.city = extra.country;
-            client.state = extra.state;
-            client.phone = extra.phone;
+            Object.assign(client,extra);
             output.push(client);
         }
         return output;
     }
 
-    var promises = [];
+    var tasks = [];
     let initialTime = new Date();
     while(clients.length > 0){
             let docs = mergeDocs(clients,extraInfo,qty);
-            await customersCollection.insertMany(docs);
+            tasks.push(customersCollection.insertMany(docs));
     }
+    console.log("Running " + tasks.length + " tasks in parallel...")
+    await Promise.all(tasks);
     return "Elapsed time in miliseconds: " + (new Date() - initialTime) + 'ms';
 }
 
